@@ -1,4 +1,4 @@
-name: Build dylib Direct
+name: Build
 
 on: workflow_dispatch
 
@@ -9,31 +9,19 @@ jobs:
     steps:
     - uses: actions/checkout@v4
     
-    - name: Build dylib with Xcode
+    - name: Install ldid
+      run: brew install ldid
+      
+    - name: Build
+      run: make
+      
+    - name: Check
       run: |
-        # Compilation directe pour iOS
-        SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
-        
-        clang -arch arm64 -arch arm64e \
-          -isysroot $SDK_PATH \
-          -framework Foundation \
-          -framework UIKit \
-          -dynamiclib \
-          -o cemobile.dylib \
-          Tweak.xm \
-          -fobjc-arc
-        
-        # Signature fake pour iOS
-        brew install ldid
-        ldid -S cemobile.dylib
-        
-        # Vérification
         file cemobile.dylib
-    
+        otool -l cemobile.dylib | grep "arm64"
+        
     - name: Upload
       uses: actions/upload-artifact@v4
       with:
-        name: cemobile-dylib
-        path: |
-          cemobile.dylib
-          cemobile.plist
+        name: dylib
+        path: cemobile.dylib
