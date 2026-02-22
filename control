@@ -1,0 +1,9 @@
+Package: com.yourname.cemobile
+Name: CheatEngine Mobile
+Version: 1.0.0
+Architecture: iphoneos-arm
+Description: Basic memory scanner for iOS
+Maintainer: YourName
+Author: YourName
+Section: Tweaks
+Depends: mobilesubstrate (>= 0.9.5000)
