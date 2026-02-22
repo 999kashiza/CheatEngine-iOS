@@ -1,0 +1,38 @@
+name: Build iOS Tweak
+
+on:
+  workflow_dispatch:  # Déclenchement manuel
+  push:
+    branches: [ main ]
+
+jobs:
+  build:
+    runs-on: macos-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Theos
+      run: |
+        bash -c "$(curl -fsSL https://raw.githubusercontent.com/theos/theos/master/bin/install-theos)"
+        echo "THEOS=$HOME/theos" >> $GITHUB_ENV
+    
+    - name: Build Package
+      run: |
+        export THEOS=$HOME/theos
+        make package FINALPACKAGE=1
+    
+    - name: Extract dylib
+      run: |
+        mkdir -p output
+        # Extraire le dylib du deb généré
+        dpkg-deb -x packages/*.deb extracted/
+        cp extracted/Library/MobileSubstrate/DynamicLibraries/*.dylib output/
+        cp extracted/Library/MobileSubstrate/DynamicLibraries/*.plist output/
+    
+    - name: Upload Artifact
+      uses: actions/upload-artifact@v3
+      with:
+        name: cemobile-dylib
+        path: output/
+        retention-days: 30
