@@ -10,7 +10,7 @@ jobs:
     runs-on: macos-latest
     
     steps:
-    - uses: actions/checkout@v3
+    - uses: actions/checkout@v4  # ← Mis à jour v4
     
     - name: Setup Theos
       run: |
@@ -29,9 +29,10 @@ jobs:
         dpkg-deb -x packages/*.deb extracted/
         cp extracted/Library/MobileSubstrate/DynamicLibraries/*.dylib output/
         cp extracted/Library/MobileSubstrate/DynamicLibraries/*.plist output/
+        ls -la output/
     
     - name: Upload Artifact
-      uses: actions/upload-artifact@v3
+      uses: actions/upload-artifact@v4  # ← CORRIGÉ : v4 au lieu de v3
       with:
         name: cemobile-dylib
         path: output/
