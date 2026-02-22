@@ -1,47 +1,39 @@
-name: Build iOS Tweak
+name: Build dylib Direct
 
-on:
-  workflow_dispatch:
-  push:
-    branches: [ main ]
+on: workflow_dispatch
 
 jobs:
   build:
-    runs-on: macos-latest  # ou macos-14
+    runs-on: macos-latest
     
     steps:
-    - name: Checkout
-      uses: actions/checkout@v4
+    - uses: actions/checkout@v4
     
-    - name: Install Dependencies
+    - name: Build dylib with Xcode
       run: |
-        brew install ldid dpkg
-        brew install xz || true
+        # Compilation directe pour iOS
+        SDK_PATH=$(xcrun --sdk iphoneos --show-sdk-path)
+        
+        clang -arch arm64 -arch arm64e \
+          -isysroot $SDK_PATH \
+          -framework Foundation \
+          -framework UIKit \
+          -dynamiclib \
+          -o cemobile.dylib \
+          Tweak.xm \
+          -fobjc-arc
+        
+        # Signature fake pour iOS
+        brew install ldid
+        ldid -S cemobile.dylib
+        
+        # Vérification
+        file cemobile.dylib
     
-    - name: Setup Theos
-      run: |
-        export THEOS=~/theos
-        git clone --recursive https://github.com/theos/theos.git $THEOS
-        echo "THEOS=$THEOS" >> $GITHUB_ENV
-    
-    - name: Build Package
-      run: |
-        export THEOS=~/theos
-        make package FINALPACKAGE=1
-      env:
-        TARGET: iphone:clang:latest:14.0
-    
-    - name: Extract dylib
-      run: |
-        mkdir -p output
-        ls -la packages/
-        dpkg-deb -x packages/*.deb extracted/
-        find extracted/ -name "*.dylib" -exec cp {} output/ \;
-        find extracted/ -name "*.plist" -exec cp {} output/ \;
-        ls -la output/
-    
-    - name: Upload Artifact
+    - name: Upload
       uses: actions/upload-artifact@v4
       with:
         name: cemobile-dylib
-        path: output/
+        path: |
+          cemobile.dylib
+          cemobile.plist
