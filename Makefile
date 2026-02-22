@@ -1,14 +1,17 @@
-TARGET := iphone:clang:latest:15.0
-ARCHS = arm64 arm64e
-DEBUG = 0
-GO_EASY_ON_ME = 1
+CC = clang
+SDK = $(shell xcrun --sdk iphoneos --show-sdk-path)
 
-include $(THEOS)/makefiles/common.mk
+cemobile.dylib: Tweak.c
+	$(CC) -arch arm64 -arch arm64e \
+		-isysroot $(SDK) \
+		-framework Foundation \
+		-framework UIKit \
+		-dynamiclib \
+		-fobjc-arc \
+		-o $@ $<
+	ldid -S $@
 
-TWEAK_NAME = cemobile
+clean:
+	rm -f *.dylib
 
-cemobile_FILES = Tweak.xm
-cemobile_CFLAGS = -fobjc-arc
-cemobile_FRAMEWORKS = UIKit Foundation
-
-include $(THEOS_MAKE_PATH)/tweak.mk
+.PHONY: clean
